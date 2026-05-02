@@ -1,0 +1,1514 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Nairobi Resto OS — Restaurant operations platform API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health checks
+  - name: auth
+    description: Authentication and session management
+  - name: restaurants
+    description: Restaurant profile and settings
+  - name: staff
+    description: Staff accounts and roles
+  - name: tables
+    description: Table management and floor map
+  - name: reservations
+    description: Reservation management
+  - name: guests
+    description: Guest CRM profiles
+  - name: dashboard
+    description: Dashboard and analytics summaries
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ─── AUTH ────────────────────────────────────────────────────────────────────
+
+  /auth/register:
+    post:
+      operationId: registerRestaurant
+      tags: [auth]
+      summary: Register a new restaurant and owner account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBody"
+      responses:
+        "201":
+          description: Restaurant and owner created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out current session
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMember"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  # ─── RESTAURANT ───────────────────────────────────────────────────────────────
+
+  /restaurants/me:
+    get:
+      operationId: getMyRestaurant
+      tags: [restaurants]
+      summary: Get the current restaurant profile
+      responses:
+        "200":
+          description: Restaurant profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Restaurant"
+    put:
+      operationId: updateMyRestaurant
+      tags: [restaurants]
+      summary: Update restaurant profile and settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRestaurantBody"
+      responses:
+        "200":
+          description: Updated restaurant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Restaurant"
+
+  /restaurants/me/stats:
+    get:
+      operationId: getRestaurantStats
+      tags: [restaurants]
+      summary: Get tonight's operational stats summary
+      responses:
+        "200":
+          description: Tonight stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestaurantStats"
+
+  # ─── STAFF ────────────────────────────────────────────────────────────────────
+
+  /staff:
+    get:
+      operationId: listStaff
+      tags: [staff]
+      summary: List all staff members
+      responses:
+        "200":
+          description: Staff list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffMember"
+    post:
+      operationId: createStaff
+      tags: [staff]
+      summary: Add a new staff member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStaffBody"
+      responses:
+        "201":
+          description: Staff member created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMember"
+
+  /staff/{staffId}:
+    get:
+      operationId: getStaff
+      tags: [staff]
+      summary: Get a staff member
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Staff member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMember"
+    put:
+      operationId: updateStaff
+      tags: [staff]
+      summary: Update a staff member
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStaffBody"
+      responses:
+        "200":
+          description: Updated staff member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMember"
+    delete:
+      operationId: deleteStaff
+      tags: [staff]
+      summary: Remove a staff member
+      parameters:
+        - name: staffId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # ─── TABLES & FLOOR MAP ───────────────────────────────────────────────────────
+
+  /tables:
+    get:
+      operationId: listTables
+      tags: [tables]
+      summary: List all tables
+      responses:
+        "200":
+          description: Tables list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Table"
+    post:
+      operationId: createTable
+      tags: [tables]
+      summary: Create a new table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTableBody"
+      responses:
+        "201":
+          description: Table created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Table"
+
+  /tables/{tableId}:
+    put:
+      operationId: updateTable
+      tags: [tables]
+      summary: Update a table
+      parameters:
+        - name: tableId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTableBody"
+      responses:
+        "200":
+          description: Updated table
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Table"
+    delete:
+      operationId: deleteTable
+      tags: [tables]
+      summary: Delete a table
+      parameters:
+        - name: tableId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /tables/{tableId}/status:
+    put:
+      operationId: updateTableStatus
+      tags: [tables]
+      summary: Update a table's live status (host view)
+      parameters:
+        - name: tableId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTableStatusBody"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Table"
+
+  /tables/floor-map:
+    get:
+      operationId: getFloorMap
+      tags: [tables]
+      summary: Get the full floor map with positions and live statuses
+      responses:
+        "200":
+          description: Floor map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FloorMap"
+    put:
+      operationId: saveFloorMap
+      tags: [tables]
+      summary: Save floor map layout (positions, zones)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveFloorMapBody"
+      responses:
+        "200":
+          description: Floor map saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FloorMap"
+
+  /tables/availability:
+    get:
+      operationId: getTableAvailability
+      tags: [tables]
+      summary: Get table availability for a given date and time
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: time
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: partySize
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Available slots
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailabilityResult"
+
+  # ─── RESERVATIONS ─────────────────────────────────────────────────────────────
+
+  /reservations:
+    get:
+      operationId: listReservations
+      tags: [reservations]
+      summary: List reservations with optional filters
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, seated, completed, cancelled, no_show]
+        - name: tableId
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Reservations list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Reservation"
+    post:
+      operationId: createReservation
+      tags: [reservations]
+      summary: Create a new reservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReservationBody"
+      responses:
+        "201":
+          description: Reservation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reservation"
+
+  /reservations/tonight:
+    get:
+      operationId: getTonightReservations
+      tags: [reservations]
+      summary: Get all reservations for tonight with full detail
+      responses:
+        "200":
+          description: Tonight's reservations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TonightSummary"
+
+  /reservations/{reservationId}:
+    get:
+      operationId: getReservation
+      tags: [reservations]
+      summary: Get a single reservation
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Reservation detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reservation"
+    put:
+      operationId: updateReservation
+      tags: [reservations]
+      summary: Update a reservation
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateReservationBody"
+      responses:
+        "200":
+          description: Updated reservation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reservation"
+    delete:
+      operationId: cancelReservation
+      tags: [reservations]
+      summary: Cancel a reservation
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # ─── GUESTS ───────────────────────────────────────────────────────────────────
+
+  /guests:
+    get:
+      operationId: listGuests
+      tags: [guests]
+      summary: List guest profiles with optional search
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: vip
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Guest list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Guest"
+    post:
+      operationId: createGuest
+      tags: [guests]
+      summary: Create a new guest profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGuestBody"
+      responses:
+        "201":
+          description: Guest created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Guest"
+
+  /guests/{guestId}:
+    get:
+      operationId: getGuest
+      tags: [guests]
+      summary: Get a guest profile with visit history
+      parameters:
+        - name: guestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Guest profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestDetail"
+    put:
+      operationId: updateGuest
+      tags: [guests]
+      summary: Update a guest profile
+      parameters:
+        - name: guestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGuestBody"
+      responses:
+        "200":
+          description: Updated guest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Guest"
+
+  # ─── DASHBOARD ────────────────────────────────────────────────────────────────
+
+  /dashboard/tonight:
+    get:
+      operationId: getDashboardTonight
+      tags: [dashboard]
+      summary: Tonight's operational overview — covers, tables, deposits, pre-orders
+      responses:
+        "200":
+          description: Tonight dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardTonight"
+
+  /dashboard/analytics:
+    get:
+      operationId: getDashboardAnalytics
+      tags: [dashboard]
+      summary: Revenue and operations analytics
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardAnalytics"
+
+# ─── SCHEMAS ──────────────────────────────────────────────────────────────────
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required: [error, message]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    # AUTH
+
+    RegisterBody:
+      type: object
+      properties:
+        restaurantName:
+          type: string
+        location:
+          type: string
+        ownerName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        phone:
+          type: string
+      required: [restaurantName, location, ownerName, email, password, phone]
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required: [email, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/StaffMember"
+        restaurant:
+          $ref: "#/components/schemas/Restaurant"
+      required: [token, user, restaurant]
+
+    # RESTAURANT
+
+    Restaurant:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        location:
+          type: string
+        neighbourhood:
+          type: string
+          enum: [westlands, kilimani, karen, hurlingham, cbd, other]
+        phone:
+          type: string
+        email:
+          type: string
+        logoUrl:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        openingTime:
+          type: string
+        closingTime:
+          type: string
+        slotDurationMinutes:
+          type: integer
+        turnTimeMinutes:
+          type: integer
+        currency:
+          type: string
+          default: KES
+        depositRequired:
+          type: boolean
+        depositAmountKes:
+          type: integer
+          nullable: true
+        depositPeakSlotsOnly:
+          type: boolean
+        peakSlots:
+          type: array
+          items:
+            type: string
+        subscriptionPlan:
+          type: string
+          enum: [starter, professional, enterprise]
+        subscriptionStatus:
+          type: string
+          enum: [active, trial, suspended]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, location, neighbourhood, phone, email, openingTime, closingTime, slotDurationMinutes, turnTimeMinutes, currency, depositRequired, depositPeakSlotsOnly, peakSlots, subscriptionPlan, subscriptionStatus, createdAt]
+
+    UpdateRestaurantBody:
+      type: object
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+        neighbourhood:
+          type: string
+          enum: [westlands, kilimani, karen, hurlingham, cbd, other]
+        phone:
+          type: string
+        email:
+          type: string
+        logoUrl:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        openingTime:
+          type: string
+        closingTime:
+          type: string
+        slotDurationMinutes:
+          type: integer
+        turnTimeMinutes:
+          type: integer
+        depositRequired:
+          type: boolean
+        depositAmountKes:
+          type: integer
+          nullable: true
+        depositPeakSlotsOnly:
+          type: boolean
+        peakSlots:
+          type: array
+          items:
+            type: string
+
+    RestaurantStats:
+      type: object
+      properties:
+        tonightCovers:
+          type: integer
+        confirmedReservations:
+          type: integer
+        pendingReservations:
+          type: integer
+        seatedGuests:
+          type: integer
+        availableTables:
+          type: integer
+        occupiedTables:
+          type: integer
+        depositsCollectedKes:
+          type: integer
+        depositsExpectedKes:
+          type: integer
+        noShowCount:
+          type: integer
+        preOrdersPending:
+          type: integer
+      required: [tonightCovers, confirmedReservations, pendingReservations, seatedGuests, availableTables, occupiedTables, depositsCollectedKes, depositsExpectedKes, noShowCount, preOrdersPending]
+
+    # STAFF
+
+    StaffMember:
+      type: object
+      properties:
+        id:
+          type: string
+        restaurantId:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [owner, manager, host, kitchen]
+        phone:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, restaurantId, name, email, role, isActive, createdAt]
+
+    CreateStaffBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        role:
+          type: string
+          enum: [manager, host, kitchen]
+        phone:
+          type: string
+          nullable: true
+      required: [name, email, password, role]
+
+    UpdateStaffBody:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [manager, host, kitchen]
+        phone:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        password:
+          type: string
+          nullable: true
+
+    # TABLES
+
+    Table:
+      type: object
+      properties:
+        id:
+          type: string
+        restaurantId:
+          type: string
+        number:
+          type: string
+        capacity:
+          type: integer
+        shape:
+          type: string
+          enum: [round, rectangular, booth]
+        zone:
+          type: string
+          nullable: true
+        positionX:
+          type: number
+          nullable: true
+        positionY:
+          type: number
+          nullable: true
+        width:
+          type: number
+          nullable: true
+        height:
+          type: number
+          nullable: true
+        status:
+          type: string
+          enum: [available, reserved, seated, needs_cleaning, hold]
+        notes:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+      required: [id, restaurantId, number, capacity, shape, status, isActive]
+
+    CreateTableBody:
+      type: object
+      properties:
+        number:
+          type: string
+        capacity:
+          type: integer
+        shape:
+          type: string
+          enum: [round, rectangular, booth]
+        zone:
+          type: string
+          nullable: true
+        positionX:
+          type: number
+          nullable: true
+        positionY:
+          type: number
+          nullable: true
+        width:
+          type: number
+          nullable: true
+        height:
+          type: number
+          nullable: true
+      required: [number, capacity, shape]
+
+    UpdateTableBody:
+      type: object
+      properties:
+        number:
+          type: string
+        capacity:
+          type: integer
+        shape:
+          type: string
+          enum: [round, rectangular, booth]
+        zone:
+          type: string
+          nullable: true
+        positionX:
+          type: number
+          nullable: true
+        positionY:
+          type: number
+          nullable: true
+        width:
+          type: number
+          nullable: true
+        height:
+          type: number
+          nullable: true
+        isActive:
+          type: boolean
+
+    UpdateTableStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [available, reserved, seated, needs_cleaning, hold]
+        notes:
+          type: string
+          nullable: true
+      required: [status]
+
+    FloorMap:
+      type: object
+      properties:
+        restaurantId:
+          type: string
+        tables:
+          type: array
+          items:
+            $ref: "#/components/schemas/Table"
+        zones:
+          type: array
+          items:
+            type: string
+        canvasWidth:
+          type: number
+        canvasHeight:
+          type: number
+        updatedAt:
+          type: string
+          format: date-time
+      required: [restaurantId, tables, zones, canvasWidth, canvasHeight, updatedAt]
+
+    SaveFloorMapBody:
+      type: object
+      properties:
+        tables:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              positionX:
+                type: number
+              positionY:
+                type: number
+              width:
+                type: number
+              height:
+                type: number
+              zone:
+                type: string
+                nullable: true
+            required: [id, positionX, positionY]
+        zones:
+          type: array
+          items:
+            type: string
+        canvasWidth:
+          type: number
+        canvasHeight:
+          type: number
+      required: [tables, zones, canvasWidth, canvasHeight]
+
+    AvailabilityResult:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+        partySize:
+          type: integer
+        availableTables:
+          type: array
+          items:
+            $ref: "#/components/schemas/Table"
+        isFullyBooked:
+          type: boolean
+      required: [date, time, partySize, availableTables, isFullyBooked]
+
+    # RESERVATIONS
+
+    Reservation:
+      type: object
+      properties:
+        id:
+          type: string
+        restaurantId:
+          type: string
+        guestId:
+          type: string
+          nullable: true
+        tableId:
+          type: string
+          nullable: true
+        guestName:
+          type: string
+        guestPhone:
+          type: string
+        guestWhatsapp:
+          type: string
+          nullable: true
+        partySize:
+          type: integer
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+        occasion:
+          type: string
+          nullable: true
+          enum: [birthday, anniversary, proposal, business, other, null]
+        status:
+          type: string
+          enum: [pending, confirmed, seated, completed, cancelled, no_show]
+        source:
+          type: string
+          enum: [online, whatsapp, walk_in, phone, manual]
+        depositRequired:
+          type: boolean
+        depositPaid:
+          type: boolean
+        depositAmountKes:
+          type: integer
+          nullable: true
+        dietaryNotes:
+          type: string
+          nullable: true
+        internalNotes:
+          type: string
+          nullable: true
+        hasPreOrder:
+          type: boolean
+        reminderSent24h:
+          type: boolean
+        reminderSent2h:
+          type: boolean
+        table:
+          $ref: "#/components/schemas/Table"
+          nullable: true
+        guest:
+          $ref: "#/components/schemas/Guest"
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, restaurantId, guestName, guestPhone, partySize, date, time, status, source, depositRequired, depositPaid, hasPreOrder, reminderSent24h, reminderSent2h, createdAt]
+
+    CreateReservationBody:
+      type: object
+      properties:
+        guestName:
+          type: string
+        guestPhone:
+          type: string
+        guestWhatsapp:
+          type: string
+          nullable: true
+        partySize:
+          type: integer
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+        tableId:
+          type: string
+          nullable: true
+        occasion:
+          type: string
+          nullable: true
+          enum: [birthday, anniversary, proposal, business, other, null]
+        source:
+          type: string
+          enum: [online, whatsapp, walk_in, phone, manual]
+          default: manual
+        dietaryNotes:
+          type: string
+          nullable: true
+        internalNotes:
+          type: string
+          nullable: true
+        guestId:
+          type: string
+          nullable: true
+      required: [guestName, guestPhone, partySize, date, time, source]
+
+    UpdateReservationBody:
+      type: object
+      properties:
+        guestName:
+          type: string
+        guestPhone:
+          type: string
+        guestWhatsapp:
+          type: string
+          nullable: true
+        partySize:
+          type: integer
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+        tableId:
+          type: string
+          nullable: true
+        occasion:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, confirmed, seated, completed, cancelled, no_show]
+        depositPaid:
+          type: boolean
+        depositAmountKes:
+          type: integer
+          nullable: true
+        dietaryNotes:
+          type: string
+          nullable: true
+        internalNotes:
+          type: string
+          nullable: true
+
+    TonightSummary:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        totalCovers:
+          type: integer
+        reservations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Reservation"
+        statsByStatus:
+          type: object
+          additionalProperties:
+            type: integer
+        depositsSummary:
+          type: object
+          properties:
+            collected:
+              type: integer
+            expected:
+              type: integer
+            pending:
+              type: integer
+          required: [collected, expected, pending]
+      required: [date, totalCovers, reservations, statsByStatus, depositsSummary]
+
+    # GUESTS
+
+    Guest:
+      type: object
+      properties:
+        id:
+          type: string
+        restaurantId:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        whatsapp:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        dietaryNotes:
+          type: string
+          nullable: true
+        allergies:
+          type: string
+          nullable: true
+        preferences:
+          type: string
+          nullable: true
+        isVip:
+          type: boolean
+        visitCount:
+          type: integer
+        lastVisitDate:
+          type: string
+          format: date
+          nullable: true
+        loyaltyPoints:
+          type: integer
+        loyaltyTier:
+          type: string
+          enum: [regular, preferred, vip]
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, restaurantId, name, phone, isVip, visitCount, loyaltyPoints, createdAt]
+
+    GuestDetail:
+      allOf:
+        - $ref: "#/components/schemas/Guest"
+        - type: object
+          properties:
+            reservationHistory:
+              type: array
+              items:
+                $ref: "#/components/schemas/Reservation"
+          required: [reservationHistory]
+
+    CreateGuestBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        whatsapp:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        dietaryNotes:
+          type: string
+          nullable: true
+        allergies:
+          type: string
+          nullable: true
+        preferences:
+          type: string
+          nullable: true
+        isVip:
+          type: boolean
+          default: false
+        notes:
+          type: string
+          nullable: true
+      required: [name, phone]
+
+    UpdateGuestBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        whatsapp:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        dietaryNotes:
+          type: string
+          nullable: true
+        allergies:
+          type: string
+          nullable: true
+        preferences:
+          type: string
+          nullable: true
+        isVip:
+          type: boolean
+        notes:
+          type: string
+          nullable: true
+
+    # DASHBOARD
+
+    DashboardTonight:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        totalCovers:
+          type: integer
+        confirmed:
+          type: integer
+        seated:
+          type: integer
+        completed:
+          type: integer
+        noShows:
+          type: integer
+        cancelled:
+          type: integer
+        availableTables:
+          type: integer
+        occupiedTables:
+          type: integer
+        totalTables:
+          type: integer
+        depositsCollectedKes:
+          type: integer
+        depositsExpectedKes:
+          type: integer
+        preOrdersPending:
+          type: integer
+        preOrdersConfirmed:
+          type: integer
+        alerts:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [allergy, vip_arrival, deposit_missing, pre_order_missing]
+              message:
+                type: string
+              reservationId:
+                type: string
+                nullable: true
+            required: [type, message]
+        upcomingArrivals:
+          type: array
+          items:
+            $ref: "#/components/schemas/Reservation"
+      required: [date, totalCovers, confirmed, seated, completed, noShows, cancelled, availableTables, occupiedTables, totalTables, depositsCollectedKes, depositsExpectedKes, preOrdersPending, preOrdersConfirmed, alerts, upcomingArrivals]
+
+    DashboardAnalytics:
+      type: object
+      properties:
+        periodDays:
+          type: integer
+        totalCovers:
+          type: integer
+        averageCoversPerNight:
+          type: number
+        averagePartySize:
+          type: number
+        noShowRate:
+          type: number
+        cancellationRate:
+          type: number
+        depositConversionRate:
+          type: number
+        totalDepositsCollectedKes:
+          type: integer
+        topOccasions:
+          type: array
+          items:
+            type: object
+            properties:
+              occasion:
+                type: string
+              count:
+                type: integer
+            required: [occasion, count]
+        coversByDay:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              covers:
+                type: integer
+            required: [date, covers]
+        bookingsBySource:
+          type: array
+          items:
+            type: object
+            properties:
+              source:
+                type: string
+              count:
+                type: integer
+            required: [source, count]
+        peakBookingTimes:
+          type: array
+          items:
+            type: object
+            properties:
+              time:
+                type: string
+              count:
+                type: integer
+            required: [time, count]
+      required: [periodDays, totalCovers, averageCoversPerNight, averagePartySize, noShowRate, cancellationRate, depositConversionRate, totalDepositsCollectedKes, topOccasions, coversByDay, bookingsBySource, peakBookingTimes]
